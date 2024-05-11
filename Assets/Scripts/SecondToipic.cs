@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class LevelManager : MonoBehaviour
+public class SecondToipic : MonoBehaviour
 {
     public List<GameObject> Levels;
     [SerializeField] private int _level;
