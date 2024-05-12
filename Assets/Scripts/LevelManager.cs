@@ -107,16 +107,16 @@ public class LevelManager : MonoBehaviour
     void InitializeAnswers()
     {
         // Example: Initialize correct answers for each level
-        correctAnswers.Add(new List<string> { "Debug" }); // Answers for level 1
-        correctAnswers.Add(new List<string> { "Log" }); // Answers for level 2
-        correctAnswers.Add(new List<string> { "Math" }); // Answers for level 3
+        correctAnswers.Add(new List<string> { "int", "10" }); // Answers for level 1
+        correctAnswers.Add(new List<string> { "int", "5", "int", "10", "int", "num1", "num2", }); // Answers for level 2
+        correctAnswers.Add(new List<string> { "int","20","age","18" }); // Answers for level 3
         correctAnswers.Add(new List<string> { "if" }); // Answers for level 4
-        correctAnswers.Add(new List<string> { "PlayerPrefs" }); // Answers for level 5
+        correctAnswers.Add(new List<string> { "int","int","5","0","10" }); // Answers for level 5
         // Add more as needed for each level
 
         outputs.Add("\"Hello world!\""); // Output for level 1
         outputs.Add("\"Another output!\""); // Output for level 2
-        outputs.Add("\"7\""); // Output for level 3
+        outputs.Add("\"You are an adult\""); // Output for level 3
         outputs.Add("\"You passed the level!\""); // Output for level 4
         outputs.Add("\"true\""); // Output for level 5
     }

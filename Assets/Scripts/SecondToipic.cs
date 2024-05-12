@@ -107,10 +107,10 @@ public class SecondToipic : MonoBehaviour
     void InitializeAnswers()
     {
         // Example: Initialize correct answers for each level
-        correctAnswers.Add(new List<string> { "Debug" }); // Answers for level 1
+        correctAnswers.Add(new List<string> { "void", "Hello" }); // Answers for level 1
         correctAnswers.Add(new List<string> { "Log" }); // Answers for level 2
-        correctAnswers.Add(new List<string> { "Math" }); // Answers for level 3
-        correctAnswers.Add(new List<string> { "if" }); // Answers for level 4
+        correctAnswers.Add(new List<string> { "void","string","name" }); // Answers for level 3
+        correctAnswers.Add(new List<string> { "int","int","int","num1","num2" }); // Answers for level 4
         correctAnswers.Add(new List<string> { "PlayerPrefs" }); // Answers for level 5
         // Add more as needed for each level
 
