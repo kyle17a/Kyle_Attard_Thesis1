@@ -9,4 +9,12 @@ public class SceneLoader : MonoBehaviour
     {
         SceneManager.LoadScene(1);
     }
+    public void LoadPuzzleScene()
+    {
+        SceneManager.LoadScene(3);
+    }
+    public void LoadWelcomeScene()
+    {
+        SceneManager.LoadScene(0);
+    }
 }
