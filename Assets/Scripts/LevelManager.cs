@@ -25,6 +25,12 @@ public class LevelManager : MonoBehaviour
     private bool[] correctButtonForLevel = { true, false };
     private int currentLevel = 0; // Track the current level
 
+    public int points = 0;
+    public TextMeshProUGUI pointsDisplay;
+
+    public ParticleSystem correctAnswerEffect;
+    //public ParticleSystem wrongAnswerEffect;
+
 
 
     private void Start()
@@ -32,6 +38,8 @@ public class LevelManager : MonoBehaviour
         StartCoroutine(StartIntroSequence());
         choiceButton1.onClick.AddListener(() => ButtonClicked(true));
         choiceButton2.onClick.AddListener(() => ButtonClicked(false));
+        pointsDisplay.text = "Points: " + points;
+        correctAnswerEffect.Stop();
 
     }
 
@@ -41,13 +49,17 @@ public class LevelManager : MonoBehaviour
 
         if (isCorrect)
         {
+            
             Debug.Log("Correct choice!");
             // Proceed to next level or handle victory
+            //correctAnswerEffect.Play();
+            
         }
         else
         {
             Debug.Log("Wrong choice, try again!");
             // Optionally, you can allow retrying or handle a game over scenario
+            //wrongAnswerEffect.Play();
         }
 
         StartCoroutine(DelayedLevelChange());
@@ -123,6 +135,7 @@ public class LevelManager : MonoBehaviour
 
     public void CheckAnswer()
     {
+
         GameObject level = Levels[_level - 1];
         TMP_InputField[] fields = level.GetComponentsInChildren<TMP_InputField>();
         List<string> levelAnswers = correctAnswers[_level - 1];
@@ -140,6 +153,9 @@ public class LevelManager : MonoBehaviour
         if (allCorrect)
         {
             answerOutput.text = outputs[_level - 1];
+            correctAnswerEffect.Play();
+            points += 10; // Add points for correct answer
+            pointsDisplay.text = "Points: " + points;
             if (_level == Levels.Count) // Assuming the last level of the first set is the last item in the Levels list
             {
                 EndFirstSetOfQuestions(); // Call this when the last question of the first set is correctly answered
