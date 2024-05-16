@@ -14,6 +14,7 @@ public class SecondToipic : MonoBehaviour
     public TextMeshProUGUI answerOutput;
     private List<string> outputs = new List<string>();
     public TextMeshProUGUI levelIndicator;
+    public Image backgroundImage;
     public Image introImage;
     public TextMeshProUGUI introText;
     public TextMeshProUGUI secondTopic;
@@ -25,6 +26,14 @@ public class SecondToipic : MonoBehaviour
     private bool[] correctButtonForLevel = { true, false };
     private int currentLevel = 0; // Track the current level
 
+    public int points = 0;
+    public TextMeshProUGUI pointsDisplay;
+
+    public ParticleSystem correctAnswerEffect;
+    public ParticleSystem wrongAnswerEffect;
+    private List<string> hints = new List<string>();
+    public Button hintButton;
+
 
 
     private void Start()
@@ -32,7 +41,21 @@ public class SecondToipic : MonoBehaviour
         StartCoroutine(StartIntroSequence());
         choiceButton1.onClick.AddListener(() => ButtonClicked(true));
         choiceButton2.onClick.AddListener(() => ButtonClicked(false));
+        hintButton.onClick.AddListener(ShowHint);
+        InitializeHints();
 
+    }
+
+    void InitializeHints()
+    {
+        hints.Add("Hint for level 1...");
+        hints.Add("Hint for level 2...");
+        // Add hints for each level
+    }
+
+    void ShowHint()
+    {
+        answerOutput.text = hints[_level - 1];
     }
 
     void ButtonClicked(bool isButton1Clicked)
@@ -140,6 +163,11 @@ public class SecondToipic : MonoBehaviour
         if (allCorrect)
         {
             answerOutput.text = outputs[_level - 1];
+            correctAnswerEffect.Play();
+            points += 10; // Add points for correct answer
+            pointsDisplay.text = "Points: " + points;
+            Color greenWithAlpha = new Color(0, 1, 0, 0.5f); // Green with 50% opacity
+            backgroundImage.color = greenWithAlpha;
             if (_level == Levels.Count) // Assuming the last level of the first set is the last item in the Levels list
             {
                 EndFirstSetOfQuestions(); // Call this when the last question of the first set is correctly answered
@@ -151,6 +179,7 @@ public class SecondToipic : MonoBehaviour
         }
         else
         {
+            wrongAnswerEffect.Play();
             answerOutput.text = "Incorrect, try again!";
         }
     }
@@ -159,7 +188,9 @@ public class SecondToipic : MonoBehaviour
 
     IEnumerator DelayedLevelChange()
     {
-        yield return new WaitForSeconds(3); // Wait for 5 seconds
+        yield return new WaitForSeconds(3); // Wait for 3 seconds
+        Color colorWithZeroAlpha = new Color(0, 0, 0, 0);
+        backgroundImage.color = colorWithZeroAlpha;
         answerOutput.text = "";
         int nextLevel = _level + 1; // Calculate the next level index
         if (nextLevel <= Levels.Count) // Check if there are more levels

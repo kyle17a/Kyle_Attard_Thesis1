@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -7,11 +8,17 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Transform gameTransform;
     [SerializeField] private Transform piecePrefab;
+    [SerializeField] private AudioClip moveSound;
+    [SerializeField] private TextMeshProUGUI timerText;
+    [SerializeField] private ParticleSystem completionParticleSystem;
 
     private List<Transform> pieces;
     private int emptyLocation;
     private int size;
     private bool shuffling = false;
+    private bool puzzleCompleted = false;
+    private AudioSource audioSource;
+    private float startTime;
 
     // Create the game setup with size x size pieces.
     private void CreateGamePieces(float gapThickness)
@@ -57,9 +64,12 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        audioSource = gameObject.AddComponent<AudioSource>();
         pieces = new List<Transform>();
         size = 2;
         CreateGamePieces(0.01f);
+
+        startTime = Time.time;
 
         // Check for completion.
         if (!shuffling && CheckCompletion())
@@ -73,14 +83,23 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        if (!shuffling && CheckCompletion())
+        if (!shuffling && !puzzleCompleted && CheckCompletion())
         {
-            Debug.Log("Well Done!");
+            puzzleCompleted = true;
+            ShowCompletionMessage();
+        }
+
+        // Update timer only if the puzzle is not completed
+        if (!puzzleCompleted)
+        {
+            float t = Time.time - startTime;
+            string minutes = ((int)t / 60).ToString();
+            string seconds = (t % 60).ToString("f2");
+            timerText.text = minutes + ":" + seconds;
         }
 
         // On click send out ray to see if we click a piece.
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && !puzzleCompleted)
         {
             RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
             if (hit)
@@ -107,6 +126,9 @@ public class GameManager : MonoBehaviour
     {
         if (((i % size) != colCheck) && ((i + offset) == emptyLocation))
         {
+            // Play move sound
+            audioSource.PlayOneShot(moveSound);
+
             // Swap them in game state.
             (pieces[i], pieces[i + offset]) = (pieces[i + offset], pieces[i]);
             // Swap their transforms.
@@ -168,6 +190,20 @@ public class GameManager : MonoBehaviour
                 count++;
             }
         }
+    }
+
+    private void ShowCompletionMessage()
+    {
+        float t = Time.time - startTime;
+        string minutes = ((int)t / 60).ToString();
+        string seconds = (t % 60).ToString("f2");
+
+        timerText.text = "You took " + minutes + " minutes and " + seconds + " seconds";
+
+        Debug.Log("Well Done!");
+
+        completionParticleSystem.Play();
+
     }
 
 }

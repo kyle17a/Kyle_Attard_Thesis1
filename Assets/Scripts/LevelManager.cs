@@ -12,6 +12,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] private GameObject SubmitButton;
     private List<List<string>> correctAnswers = new List<List<string>>();
     public TextMeshProUGUI answerOutput;
+    public Image backgroundImage;
     private List<string> outputs = new List<string>();
     public TextMeshProUGUI levelIndicator;
     public Image introImage;
@@ -29,8 +30,11 @@ public class LevelManager : MonoBehaviour
     public TextMeshProUGUI pointsDisplay;
 
     public ParticleSystem correctAnswerEffect;
-    //public ParticleSystem wrongAnswerEffect;
+    public ParticleSystem wrongAnswerEffect;
 
+    private List<string> hints = new List<string>();
+    public Button hintButton;
+    
 
 
     private void Start()
@@ -39,8 +43,22 @@ public class LevelManager : MonoBehaviour
         choiceButton1.onClick.AddListener(() => ButtonClicked(true));
         choiceButton2.onClick.AddListener(() => ButtonClicked(false));
         pointsDisplay.text = "Points: " + points;
-        correctAnswerEffect.Stop();
+        hintButton.onClick.AddListener(ShowHint);
+        InitializeHints();
 
+
+    }
+
+    void InitializeHints()
+    {
+        hints.Add("Hint for level 1...");
+        hints.Add("Hint for level 2...");
+        // Add hints for each level
+    }
+
+    void ShowHint()
+    {
+        answerOutput.text = hints[_level - 1];
     }
 
     void ButtonClicked(bool isButton1Clicked)
@@ -52,7 +70,7 @@ public class LevelManager : MonoBehaviour
             
             Debug.Log("Correct choice!");
             // Proceed to next level or handle victory
-            //correctAnswerEffect.Play();
+
             
         }
         else
@@ -156,6 +174,8 @@ public class LevelManager : MonoBehaviour
             correctAnswerEffect.Play();
             points += 10; // Add points for correct answer
             pointsDisplay.text = "Points: " + points;
+            Color greenWithAlpha = new Color(0, 1, 0, 0.5f); // Green with 50% opacity
+            backgroundImage.color = greenWithAlpha;
             if (_level == Levels.Count) // Assuming the last level of the first set is the last item in the Levels list
             {
                 EndFirstSetOfQuestions(); // Call this when the last question of the first set is correctly answered
@@ -167,6 +187,7 @@ public class LevelManager : MonoBehaviour
         }
         else
         {
+            wrongAnswerEffect.Play();
             answerOutput.text = "Incorrect, try again!";
         }
     }
@@ -175,7 +196,9 @@ public class LevelManager : MonoBehaviour
 
     IEnumerator DelayedLevelChange()
     {
-        yield return new WaitForSeconds(3); // Wait for 5 seconds
+        yield return new WaitForSeconds(3); // Wait for 3 seconds
+        Color colorWithZeroAlpha = new Color(0, 0, 0, 0);
+        backgroundImage.color = colorWithZeroAlpha;
         answerOutput.text = "";
         int nextLevel = _level + 1; // Calculate the next level index
         if (nextLevel <= Levels.Count) // Check if there are more levels
