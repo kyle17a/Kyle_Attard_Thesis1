@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
 public class LevelManager : MonoBehaviour
 {
@@ -19,7 +20,7 @@ public class LevelManager : MonoBehaviour
     public TextMeshProUGUI introText;
     public TextMeshProUGUI secondTopic;
 
-    //second Topic Variables
+    // Second Topic Variables
     public Button choiceButton1;
     public Button choiceButton2;
 
@@ -34,8 +35,12 @@ public class LevelManager : MonoBehaviour
 
     private List<string> hints = new List<string>();
     public Button hintButton;
-    
 
+    // Time and attempts tracking
+    private List<float> levelTimes = new List<float>();
+    private List<int> wrongAttempts = new List<int>();
+    private float levelStartTime;
+    private int currentWrongAttempts = 0;
 
     private void Start()
     {
@@ -45,8 +50,6 @@ public class LevelManager : MonoBehaviour
         pointsDisplay.text = "Points: " + points;
         hintButton.onClick.AddListener(ShowHint);
         InitializeHints();
-
-
     }
 
     void InitializeHints()
@@ -67,17 +70,14 @@ public class LevelManager : MonoBehaviour
 
         if (isCorrect)
         {
-            
             Debug.Log("Correct choice!");
             // Proceed to next level or handle victory
-
-            
         }
         else
         {
             Debug.Log("Wrong choice, try again!");
+            currentWrongAttempts++; // Increment the wrong attempts count
             // Optionally, you can allow retrying or handle a game over scenario
-            //wrongAnswerEffect.Play();
         }
 
         StartCoroutine(DelayedLevelChange());
@@ -117,7 +117,6 @@ public class LevelManager : MonoBehaviour
         SceneManager.LoadScene(2); // Replace "NameOfYourSecondScene" with the actual scene name
     }
 
-
     void ChangeLevel(int level)
     {
         foreach (var item in Levels)
@@ -127,6 +126,8 @@ public class LevelManager : MonoBehaviour
 
         Levels[level - 1].SetActive(true); // Activate the current level
         UpdateLevelIndicator(level);
+        levelStartTime = Time.time; // Record the start time of the level
+        currentWrongAttempts = 0; // Reset the wrong attempts count for the new level
     }
 
     void UpdateLevelIndicator(int level)
@@ -138,10 +139,10 @@ public class LevelManager : MonoBehaviour
     {
         // Example: Initialize correct answers for each level
         correctAnswers.Add(new List<string> { "int", "10" }); // Answers for level 1
-        correctAnswers.Add(new List<string> { "int", "5", "int", "10", "int", "num1", "num2", }); // Answers for level 2
-        correctAnswers.Add(new List<string> { "int","20","age","18" }); // Answers for level 3
+        correctAnswers.Add(new List<string> { "int", "5", "int", "10", "int", "num1", "num2" }); // Answers for level 2
+        correctAnswers.Add(new List<string> { "int", "20", "age", "18" }); // Answers for level 3
         correctAnswers.Add(new List<string> { "if" }); // Answers for level 4
-        correctAnswers.Add(new List<string> { "int","int","5","0","10" }); // Answers for level 5
+        correctAnswers.Add(new List<string> { "int", "int", "5", "0", "10" }); // Answers for level 5
         // Add more as needed for each level
 
         outputs.Add("\"Hello world!\""); // Output for level 1
@@ -153,7 +154,6 @@ public class LevelManager : MonoBehaviour
 
     public void CheckAnswer()
     {
-
         GameObject level = Levels[_level - 1];
         TMP_InputField[] fields = level.GetComponentsInChildren<TMP_InputField>();
         List<string> levelAnswers = correctAnswers[_level - 1];
@@ -170,14 +170,18 @@ public class LevelManager : MonoBehaviour
 
         if (allCorrect)
         {
-            answerOutput.text = outputs[_level - 1];
+            //answerOutput.text = outputs[_level - 1];
             correctAnswerEffect.Play();
             points += 10; // Add points for correct answer
             pointsDisplay.text = "Points: " + points;
             Color greenWithAlpha = new Color(0, 1, 0, 0.5f); // Green with 50% opacity
             backgroundImage.color = greenWithAlpha;
+            levelTimes.Add(Time.time - levelStartTime); // Record the time taken to complete the level
+            wrongAttempts.Add(currentWrongAttempts); // Record the number of wrong attempts
+
             if (_level == Levels.Count) // Assuming the last level of the first set is the last item in the Levels list
             {
+                SaveLevelTimesToCSV(); // Save the times to a CSV file
                 EndFirstSetOfQuestions(); // Call this when the last question of the first set is correctly answered
             }
             else
@@ -189,10 +193,9 @@ public class LevelManager : MonoBehaviour
         {
             wrongAnswerEffect.Play();
             answerOutput.text = "Incorrect, try again!";
+            currentWrongAttempts++; // Increment the wrong attempts count
         }
     }
-
-
 
     IEnumerator DelayedLevelChange()
     {
@@ -212,4 +215,20 @@ public class LevelManager : MonoBehaviour
             Debug.Log("No More Levels");
         }
     }
+
+    void SaveLevelTimesToCSV()
+    {
+        string timestamp = System.DateTime.Now.ToString("yyyyMMddHHmmss");
+        string filePath = Application.dataPath + "/LevelTimes_" + timestamp + ".csv";
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            writer.WriteLine("Level,TimeTaken,WrongAttempts");
+            for (int i = 0; i < levelTimes.Count; i++)
+            {
+                writer.WriteLine((i + 1) + "," + levelTimes[i] + "," + wrongAttempts[i]);
+            }
+        }
+        Debug.Log("Level times saved to " + filePath);
+    }
 }
+

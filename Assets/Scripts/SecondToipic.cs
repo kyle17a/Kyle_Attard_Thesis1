@@ -4,8 +4,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
-public class SecondToipic : MonoBehaviour
+public class SecondTopic : MonoBehaviour
 {
     public List<GameObject> Levels;
     [SerializeField] private int _level;
@@ -19,7 +20,7 @@ public class SecondToipic : MonoBehaviour
     public TextMeshProUGUI introText;
     public TextMeshProUGUI secondTopic;
 
-    //second Topic Variables
+    // Second Topic Variables
     public Button choiceButton1;
     public Button choiceButton2;
 
@@ -34,7 +35,11 @@ public class SecondToipic : MonoBehaviour
     private List<string> hints = new List<string>();
     public Button hintButton;
 
-
+    // Time and attempts tracking
+    private List<float> levelTimes = new List<float>();
+    private List<int> wrongAttempts = new List<int>();
+    private float levelStartTime;
+    private int currentWrongAttempts = 0;
 
     private void Start()
     {
@@ -43,7 +48,6 @@ public class SecondToipic : MonoBehaviour
         choiceButton2.onClick.AddListener(() => ButtonClicked(false));
         hintButton.onClick.AddListener(ShowHint);
         InitializeHints();
-
     }
 
     void InitializeHints()
@@ -70,6 +74,7 @@ public class SecondToipic : MonoBehaviour
         else
         {
             Debug.Log("Wrong choice, try again!");
+            currentWrongAttempts++; // Increment the wrong attempts count
             // Optionally, you can allow retrying or handle a game over scenario
         }
 
@@ -110,7 +115,6 @@ public class SecondToipic : MonoBehaviour
         SceneManager.LoadScene(2); // Replace "NameOfYourSecondScene" with the actual scene name
     }
 
-
     void ChangeLevel(int level)
     {
         foreach (var item in Levels)
@@ -120,6 +124,8 @@ public class SecondToipic : MonoBehaviour
 
         Levels[level - 1].SetActive(true); // Activate the current level
         UpdateLevelIndicator(level);
+        levelStartTime = Time.time; // Record the start time of the level
+        currentWrongAttempts = 0; // Reset the wrong attempts count for the new level
     }
 
     void UpdateLevelIndicator(int level)
@@ -132,8 +138,8 @@ public class SecondToipic : MonoBehaviour
         // Example: Initialize correct answers for each level
         correctAnswers.Add(new List<string> { "void", "Hello" }); // Answers for level 1
         correctAnswers.Add(new List<string> { "Log" }); // Answers for level 2
-        correctAnswers.Add(new List<string> { "void","string","name" }); // Answers for level 3
-        correctAnswers.Add(new List<string> { "int","int","int","num1","num2" }); // Answers for level 4
+        correctAnswers.Add(new List<string> { "void", "string", "name" }); // Answers for level 3
+        correctAnswers.Add(new List<string> { "int", "int", "int", "num1", "num2" }); // Answers for level 4
         correctAnswers.Add(new List<string> { "PlayerPrefs" }); // Answers for level 5
         // Add more as needed for each level
 
@@ -168,8 +174,12 @@ public class SecondToipic : MonoBehaviour
             pointsDisplay.text = "Points: " + points;
             Color greenWithAlpha = new Color(0, 1, 0, 0.5f); // Green with 50% opacity
             backgroundImage.color = greenWithAlpha;
+            levelTimes.Add(Time.time - levelStartTime); // Record the time taken to complete the level
+            wrongAttempts.Add(currentWrongAttempts); // Record the number of wrong attempts
+
             if (_level == Levels.Count) // Assuming the last level of the first set is the last item in the Levels list
             {
+                SaveLevelTimesToCSV(); // Save the times to a CSV file
                 EndFirstSetOfQuestions(); // Call this when the last question of the first set is correctly answered
             }
             else
@@ -181,10 +191,9 @@ public class SecondToipic : MonoBehaviour
         {
             wrongAnswerEffect.Play();
             answerOutput.text = "Incorrect, try again!";
+            currentWrongAttempts++; // Increment the wrong attempts count
         }
     }
-
-
 
     IEnumerator DelayedLevelChange()
     {
@@ -203,5 +212,20 @@ public class SecondToipic : MonoBehaviour
             answerOutput.text = "Congratulations, all levels completed!"; // Display completion message
             Debug.Log("No More Levels");
         }
+    }
+
+    void SaveLevelTimesToCSV()
+    {
+        string timestamp = System.DateTime.Now.ToString("yyyyMMddHHmmss");
+        string filePath = Application.dataPath + "/LevelTimes_" + timestamp + ".csv";
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            writer.WriteLine("Level,TimeTaken,WrongAttempts");
+            for (int i = 0; i < levelTimes.Count; i++)
+            {
+                writer.WriteLine((i + 1) + "," + levelTimes[i] + "," + wrongAttempts[i]);
+            }
+        }
+        Debug.Log("Level times saved to " + filePath);
     }
 }

@@ -1,11 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-
     [SerializeField] private Transform gameTransform;
     [SerializeField] private Transform piecePrefab;
     [SerializeField] private AudioClip moveSound;
@@ -87,6 +87,7 @@ public class GameManager : MonoBehaviour
         {
             puzzleCompleted = true;
             ShowCompletionMessage();
+            SaveCompletionTimeToCSV();
         }
 
         // Update timer only if the puzzle is not completed
@@ -203,7 +204,28 @@ public class GameManager : MonoBehaviour
         Debug.Log("Well Done!");
 
         completionParticleSystem.Play();
-
     }
 
+    private void SaveCompletionTimeToCSV()
+    {
+        float t = Time.time - startTime;
+        string minutes = ((int)t / 60).ToString();
+        string seconds = (t % 60).ToString("f2");
+        string timeTaken = minutes + " minutes and " + seconds + " seconds";
+
+        string filePath = Path.Combine(Application.dataPath, "PuzzleCompletionTimes.csv");
+        bool fileExists = File.Exists(filePath);
+
+        using (StreamWriter writer = new StreamWriter(filePath, true))
+        {
+            if (!fileExists)
+            {
+                writer.WriteLine("Completion Time");
+            }
+            writer.WriteLine(timeTaken);
+        }
+
+        Debug.Log("Completion time saved to CSV.");
+    }
 }
+
