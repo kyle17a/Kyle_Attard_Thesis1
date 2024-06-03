@@ -11,6 +11,7 @@ public class LevelManager : MonoBehaviour
     public List<GameObject> Levels;
     [SerializeField] private int _level;
     [SerializeField] private GameObject SubmitButton;
+    [SerializeField] private Button skipButton;
     private List<List<string>> correctAnswers = new List<List<string>>();
     public TextMeshProUGUI answerOutput;
     public Image backgroundImage;
@@ -24,7 +25,7 @@ public class LevelManager : MonoBehaviour
     public Button choiceButton1;
     public Button choiceButton2;
 
-    private bool[] correctButtonForLevel = { true, false };
+    private bool[] correctButtonForLevel = { true, false, true, false, true };
     private int currentLevel = 0; // Track the current level
 
     public int points = 0;
@@ -36,9 +37,13 @@ public class LevelManager : MonoBehaviour
     private List<string> hints = new List<string>();
     public Button hintButton;
 
+    // Skip tracking
+    private int skipsRemaining = 2; // Track number of skips remaining
+
     // Time and attempts tracking
     private List<float> levelTimes = new List<float>();
     private List<int> wrongAttempts = new List<int>();
+    private List<string> skippedLevels = new List<string>(); // Track skipped levels
     private float levelStartTime;
     private int currentWrongAttempts = 0;
 
@@ -49,14 +54,18 @@ public class LevelManager : MonoBehaviour
         choiceButton2.onClick.AddListener(() => ButtonClicked(false));
         pointsDisplay.text = "Points: " + points;
         hintButton.onClick.AddListener(ShowHint);
+        skipButton.onClick.AddListener(SkipLevel);
         InitializeHints();
+        UpdateSkipButton();
     }
 
     void InitializeHints()
     {
-        hints.Add("Hint for level 1...");
-        hints.Add("Hint for level 2...");
-        // Add hints for each level
+        hints.Add("Use int to declare a variable");
+        hints.Add("Use int to declare a variable to add num1 and num2");
+        hints.Add("Check if age is greater than 18");
+        hints.Add("Initialize an array with new int[size]");
+        hints.Add("Initialize the array with values directly."); // New hint for the array question
     }
 
     void ShowHint()
@@ -71,16 +80,19 @@ public class LevelManager : MonoBehaviour
         if (isCorrect)
         {
             Debug.Log("Correct choice!");
-            // Proceed to next level or handle victory
+            correctAnswerEffect.Play();
+            points += 10; // Add points for correct answer
+            pointsDisplay.text = "Points: " + points;
         }
         else
         {
             Debug.Log("Wrong choice, try again!");
+            wrongAnswerEffect.Play();
+            answerOutput.text = "Incorrect, try again!";
             currentWrongAttempts++; // Increment the wrong attempts count
-            // Optionally, you can allow retrying or handle a game over scenario
         }
 
-        StartCoroutine(DelayedLevelChange());
+        StartCoroutine(DelayedLevelChange(false)); // Pass false to indicate level was not skipped
     }
 
     IEnumerator StartIntroSequence()
@@ -96,7 +108,6 @@ public class LevelManager : MonoBehaviour
         InitializeAnswers(); // Start initializing answers and questions after intro
         _level = 1;
         ChangeLevel(_level); // Start with the first question
-        // More setup code as necessary...
     }
 
     void EndFirstSetOfQuestions()
@@ -128,6 +139,12 @@ public class LevelManager : MonoBehaviour
         UpdateLevelIndicator(level);
         levelStartTime = Time.time; // Record the start time of the level
         currentWrongAttempts = 0; // Reset the wrong attempts count for the new level
+
+        if (level == 4) // New level for the array question
+        {
+            choiceButton1.GetComponentInChildren<TextMeshProUGUI>().text = "<color=#0000ff>int[]</color> numbers = {1, 2, 3, 4, 5};";
+            choiceButton2.GetComponentInChildren<TextMeshProUGUI>().text = "<color=#0000ff>int[]</color> numbers = new int[5];";
+        }
     }
 
     void UpdateLevelIndicator(int level)
@@ -141,15 +158,8 @@ public class LevelManager : MonoBehaviour
         correctAnswers.Add(new List<string> { "int", "10" }); // Answers for level 1
         correctAnswers.Add(new List<string> { "int", "5", "int", "10", "int", "num1", "num2" }); // Answers for level 2
         correctAnswers.Add(new List<string> { "int", "20", "age", "18" }); // Answers for level 3
-        correctAnswers.Add(new List<string> { "if" }); // Answers for level 4
-        correctAnswers.Add(new List<string> { "int", "int", "5", "0", "10" }); // Answers for level 5
-        // Add more as needed for each level
-
-        outputs.Add("\"Hello world!\""); // Output for level 1
-        outputs.Add("\"Another output!\""); // Output for level 2
-        outputs.Add("\"You are an adult\""); // Output for level 3
-        outputs.Add("\"You passed the level!\""); // Output for level 4
-        outputs.Add("\"true\""); // Output for level 5
+        correctAnswers.Add(new List<string> { "void", "Hello" }); // Answers for level 4
+        correctAnswers.Add(new List<string> { "int[] numbers = {1, 2, 3, 4, 5};", "int[] numbers = new int[5];" }); // New answers for the array question
     }
 
     public void CheckAnswer()
@@ -170,7 +180,6 @@ public class LevelManager : MonoBehaviour
 
         if (allCorrect)
         {
-            //answerOutput.text = outputs[_level - 1];
             correctAnswerEffect.Play();
             points += 10; // Add points for correct answer
             pointsDisplay.text = "Points: " + points;
@@ -178,6 +187,7 @@ public class LevelManager : MonoBehaviour
             backgroundImage.color = greenWithAlpha;
             levelTimes.Add(Time.time - levelStartTime); // Record the time taken to complete the level
             wrongAttempts.Add(currentWrongAttempts); // Record the number of wrong attempts
+            skippedLevels.Add("No"); // Mark this level as not skipped
 
             if (_level == Levels.Count) // Assuming the last level of the first set is the last item in the Levels list
             {
@@ -186,7 +196,7 @@ public class LevelManager : MonoBehaviour
             }
             else
             {
-                StartCoroutine(DelayedLevelChange()); // Proceed to the next level after a delay
+                StartCoroutine(DelayedLevelChange(false)); // Pass false to indicate level was not skipped
             }
         }
         else
@@ -197,12 +207,16 @@ public class LevelManager : MonoBehaviour
         }
     }
 
-    IEnumerator DelayedLevelChange()
+    IEnumerator DelayedLevelChange(bool skipped)
     {
         yield return new WaitForSeconds(3); // Wait for 3 seconds
         Color colorWithZeroAlpha = new Color(0, 0, 0, 0);
         backgroundImage.color = colorWithZeroAlpha;
         answerOutput.text = "";
+        if (skipped)
+        {
+            skippedLevels.Add("Yes"); // Mark this level as skipped
+        }
         int nextLevel = _level + 1; // Calculate the next level index
         if (nextLevel <= Levels.Count) // Check if there are more levels
         {
@@ -216,19 +230,37 @@ public class LevelManager : MonoBehaviour
         }
     }
 
+    void SkipLevel()
+    {
+        if (skipsRemaining > 0)
+        {
+            levelTimes.Add(Time.time - levelStartTime); // Record the time taken to complete the level
+            wrongAttempts.Add(currentWrongAttempts); // Record the number of wrong attempts
+            skipsRemaining--; // Decrement the skip counter
+            UpdateSkipButton(); // Update the skip button state
+            StartCoroutine(DelayedLevelChange(true)); // Skip to the next level and pass true to indicate it was skipped
+        }
+    }
+
+    void UpdateSkipButton()
+    {
+        skipButton.interactable = (skipsRemaining > 0);
+        skipButton.GetComponentInChildren<TextMeshProUGUI>().text = "Skip (" + skipsRemaining + " left)";
+    }
+
     void SaveLevelTimesToCSV()
     {
         string timestamp = System.DateTime.Now.ToString("yyyyMMddHHmmss");
         string filePath = Application.dataPath + "/LevelTimes_" + timestamp + ".csv";
         using (StreamWriter writer = new StreamWriter(filePath))
         {
-            writer.WriteLine("Level,TimeTaken,WrongAttempts");
+            writer.WriteLine("Level,TimeTaken,WrongAttempts,PointsEarned,CompletionTime,Skipped,SessionID");
             for (int i = 0; i < levelTimes.Count; i++)
             {
-                writer.WriteLine((i + 1) + "," + levelTimes[i] + "," + wrongAttempts[i]);
+                string completionTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                writer.WriteLine((i + 1) + "," + levelTimes[i] + "," + wrongAttempts[i] + "," + ((i + 1) * 10) + "," + completionTime + "," + skippedLevels[i] + "," + timestamp);
             }
         }
         Debug.Log("Level times saved to " + filePath);
     }
 }
-
