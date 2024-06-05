@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private AudioClip moveSound;
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private ParticleSystem completionParticleSystem;
+    [SerializeField] private TMP_Dropdown sizeDropdown;
 
     private List<Transform> pieces;
     private int emptyLocation;
@@ -19,11 +21,12 @@ public class GameManager : MonoBehaviour
     private bool puzzleCompleted = false;
     private AudioSource audioSource;
     private float startTime;
+    //private int score;
 
-    // Create the game setup with size x size pieces.
+    private Transform selectedPiece;
+
     private void CreateGamePieces(float gapThickness)
     {
-        // This is the width of each tile.
         float width = 1 / (float)size;
         for (int row = 0; row < size; row++)
         {
@@ -31,13 +34,11 @@ public class GameManager : MonoBehaviour
             {
                 Transform piece = Instantiate(piecePrefab, gameTransform);
                 pieces.Add(piece);
-                // Pieces will be in a game board going from -1 to +1.
                 piece.localPosition = new Vector3(-1 + (2 * width * col) + width,
                                                   +1 - (2 * width * row) - width,
                                                   0);
                 piece.localScale = ((2 * width) - gapThickness) * Vector3.one;
                 piece.name = $"{(row * size) + col}";
-                // We want an empty space in the bottom right.
                 if ((row == size - 1) && (col == size - 1))
                 {
                     emptyLocation = (size * size) - 1;
@@ -45,33 +46,29 @@ public class GameManager : MonoBehaviour
                 }
                 else
                 {
-                    // We want to map the UV coordinates appropriately, they are 0->1.
                     float gap = gapThickness / 2;
                     Mesh mesh = piece.GetComponent<MeshFilter>().mesh;
                     Vector2[] uv = new Vector2[4];
-                    // UV coord order: (0, 1), (1, 1), (0, 0), (1, 0)
                     uv[0] = new Vector2((width * col) + gap, 1 - ((width * (row + 1)) - gap));
                     uv[1] = new Vector2((width * (col + 1)) - gap, 1 - ((width * (row + 1)) - gap));
                     uv[2] = new Vector2((width * col) + gap, 1 - ((width * row) + gap));
                     uv[3] = new Vector2((width * (col + 1)) - gap, 1 - ((width * row) + gap));
-                    // Assign our new UVs to the mesh.
                     mesh.uv = uv;
                 }
             }
         }
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         audioSource = gameObject.AddComponent<AudioSource>();
         pieces = new List<Transform>();
-        size = 2;
+        sizeDropdown.onValueChanged.AddListener(delegate { OnSizeChanged(); });
+        size = 2; // Default size
         CreateGamePieces(0.01f);
 
         startTime = Time.time;
 
-        // Check for completion.
         if (!shuffling && CheckCompletion())
         {
             shuffling = true;
@@ -80,7 +77,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (!shuffling && !puzzleCompleted && CheckCompletion())
@@ -90,7 +86,6 @@ public class GameManager : MonoBehaviour
             SaveCompletionTimeToCSV();
         }
 
-        // Update timer only if the puzzle is not completed
         if (!puzzleCompleted)
         {
             float t = Time.time - startTime;
@@ -99,19 +94,23 @@ public class GameManager : MonoBehaviour
             timerText.text = minutes + ":" + seconds;
         }
 
-        // On click send out ray to see if we click a piece.
         if (Input.GetMouseButtonDown(0) && !puzzleCompleted)
         {
             RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
             if (hit)
             {
-                // Go through the list, the index tells us the position.
+                if (selectedPiece != null)
+                {
+                    selectedPiece.GetComponent<Renderer>().material.color = Color.white;
+                }
+
+                selectedPiece = hit.transform;
+                selectedPiece.GetComponent<Renderer>().material.color = Color.red;
+
                 for (int i = 0; i < pieces.Count; i++)
                 {
                     if (pieces[i] == hit.transform)
                     {
-                        // Check each direction to see if valid move.
-                        // We break out on success so we don't carry on and swap back again.
                         if (SwapIfValid(i, -size, size)) { break; }
                         if (SwapIfValid(i, +size, size)) { break; }
                         if (SwapIfValid(i, -1, 0)) { break; }
@@ -122,26 +121,21 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // colCheck is used to stop horizontal moves wrapping.
     private bool SwapIfValid(int i, int offset, int colCheck)
     {
         if (((i % size) != colCheck) && ((i + offset) == emptyLocation))
         {
-            // Play move sound
             audioSource.PlayOneShot(moveSound);
 
-            // Swap them in game state.
             (pieces[i], pieces[i + offset]) = (pieces[i + offset], pieces[i]);
-            // Swap their transforms.
-            (pieces[i].localPosition, pieces[i + offset].localPosition) = ((pieces[i + offset].localPosition, pieces[i].localPosition));
-            // Update empty location.
+            (pieces[i].localPosition, pieces[i + offset].localPosition) = (pieces[i + offset].localPosition, pieces[i].localPosition);
+
             emptyLocation = i;
             return true;
         }
         return false;
     }
 
-    // We name the pieces in order so we can use this to check completion.
     private bool CheckCompletion()
     {
         for (int i = 0; i < pieces.Count; i++)
@@ -161,19 +155,15 @@ public class GameManager : MonoBehaviour
         shuffling = false;
     }
 
-    // Brute force shuffling.
     private void Shuffle()
     {
         int count = 0;
         int last = 0;
         while (count < (size * size * size))
         {
-            // Pick a random location.
             int rnd = Random.Range(0, size * size);
-            // Only thing we forbid is undoing the last move.
             if (rnd == last) { continue; }
             last = emptyLocation;
-            // Try surrounding spaces looking for valid move.
             if (SwapIfValid(rnd, -size, size))
             {
                 count++;
@@ -198,8 +188,9 @@ public class GameManager : MonoBehaviour
         float t = Time.time - startTime;
         string minutes = ((int)t / 60).ToString();
         string seconds = (t % 60).ToString("f2");
+        //score = Mathf.Max(0, (int)(1000 - t)); // Example score calculation
 
-        timerText.text = "You took " + minutes + " minutes and " + seconds + " seconds";
+        timerText.text = $"You took {minutes} minutes and {seconds} seconds.";
 
         Debug.Log("Well Done!");
 
@@ -227,5 +218,24 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("Completion time saved to CSV.");
     }
-}
 
+    private void OnSizeChanged()
+    {
+        size = int.Parse(sizeDropdown.options[sizeDropdown.value].text);
+        ResetGame();
+    }
+
+    private void ResetGame()
+    {
+        foreach (Transform piece in pieces)
+        {
+            Destroy(piece.gameObject);
+        }
+        pieces.Clear();
+        CreateGamePieces(0.01f);
+        shuffling = true;
+        StartCoroutine(WaitShuffle(1f));
+        puzzleCompleted = false;
+        startTime = Time.time;
+    }
+}

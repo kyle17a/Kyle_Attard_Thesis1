@@ -1352,8 +1352,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 489, y: -67}
-  m_SizeDelta: {x: 547.8273, y: 55.5111}
+  m_AnchoredPosition: {x: 363.06, y: -84.57}
+  m_SizeDelta: {x: 655.95, y: 130.65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &113873555
 MonoBehaviour:
@@ -1375,7 +1375,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: .Log("Hello world! ")
+  m_text: Choose the correct code to initialize an array of integers with the values
+    1, 2, 3, 4, and 5.
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -7244,7 +7245,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.95294124, g: 0.9568628, b: 0.9333334, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -7287,8 +7288,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 556, y: -316}
-  m_SizeDelta: {x: 225.87, y: 280.32}
+  m_AnchoredPosition: {x: 566, y: -339.84}
+  m_SizeDelta: {x: 322.99, y: 298.65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &889233856
 GameObject:
@@ -10244,8 +10245,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 178, y: -316}
-  m_SizeDelta: {x: 225.87, y: 280.32}
+  m_AnchoredPosition: {x: 156.92, y: -339.84}
+  m_SizeDelta: {x: 313.83, y: 298.65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1353912930
 MonoBehaviour:
@@ -10260,7 +10261,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.9921569, g: 0.9960785, b: 0.9725491, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
