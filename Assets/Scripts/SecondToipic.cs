@@ -124,7 +124,7 @@ public class SecondTopic : MonoBehaviour
         yield return new WaitForSeconds(3); // Wait for 3 seconds on the transition screen
 
         // Load the new scene by name or index
-        SceneManager.LoadScene(2); // Replace "NameOfYourSecondScene" with the actual scene name
+        SceneManager.LoadScene(0); // Replace "NameOfYourSecondScene" with the actual scene name
     }
 
     void ChangeLevel(int level)

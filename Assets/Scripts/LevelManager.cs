@@ -159,7 +159,7 @@ public class LevelManager : MonoBehaviour
         correctAnswers.Add(new List<string> { "int", "5", "int", "10", "int", "num1", "num2" }); // Answers for level 2
         correctAnswers.Add(new List<string> { "int", "20", "age", "18" }); // Answers for level 3
         correctAnswers.Add(new List<string> { "void", "Hello" }); // Answers for level 4
-        correctAnswers.Add(new List<string> { "int[] numbers = {1, 2, 3, 4, 5};", "int[] numbers = new int[5];" }); // New answers for the array question
+        correctAnswers.Add(new List<string> { "int","int","5","0","10" }); // New answers for the array question
     }
 
     public void CheckAnswer()

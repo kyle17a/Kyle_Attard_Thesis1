@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -14,6 +15,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ParticleSystem completionParticleSystem;
     [SerializeField] private TMP_Dropdown sizeDropdown;
 
+    // Fill-in-the-blank question elements
+    [SerializeField] private TextMeshProUGUI questionText;
+    [SerializeField] private TMP_InputField answerInput;
+    [SerializeField] private Button submitButton;
+    [SerializeField] private Button submitButton2;
+    [SerializeField] private TextMeshProUGUI feedbackText;
+
     private List<Transform> pieces;
     private int emptyLocation;
     private int size;
@@ -21,7 +29,6 @@ public class GameManager : MonoBehaviour
     private bool puzzleCompleted = false;
     private AudioSource audioSource;
     private float startTime;
-    //private int score;
 
     private Transform selectedPiece;
 
@@ -75,6 +82,11 @@ public class GameManager : MonoBehaviour
 
             StartCoroutine(WaitShuffle(1f));
         }
+
+        // Set up the fill-in-the-blank question
+        questionText.text = "What is the puzzle returning?";
+        submitButton.onClick.AddListener(CheckAnswer);
+        submitButton2.onClick.AddListener(CheckAnswer2);
     }
 
     void Update()
@@ -238,4 +250,36 @@ public class GameManager : MonoBehaviour
         puzzleCompleted = false;
         startTime = Time.time;
     }
+
+    private void CheckAnswer()
+    {
+        string correctAnswer = "result";
+        if (answerInput.text.Trim().Equals(correctAnswer, System.StringComparison.OrdinalIgnoreCase))
+        {
+            feedbackText.text = "Correct!";
+            feedbackText.color = Color.green;
+        }
+        else
+        {
+            feedbackText.text = "Incorrect, try again.";
+            feedbackText.color = Color.red;
+        }
+    }
+
+    private void CheckAnswer2()
+    {
+        string correctAnswer = "true";
+        if (answerInput.text.Trim().Equals(correctAnswer, System.StringComparison.OrdinalIgnoreCase))
+        {
+            feedbackText.text = "Correct!";
+            feedbackText.color = Color.green;
+        }
+        else
+        {
+            feedbackText.text = "Incorrect, try again.";
+            feedbackText.color = Color.red;
+        }
+    }
+
+
 }
